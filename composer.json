@@ -1,0 +1,27 @@
+{
+    "name": "zendframework/zendservice-api",
+    "description": "API client builder",
+    "type": "library",
+    "keywords": [
+        "zf2",
+        "api"
+    ],
+    "homepage": "http://packages.zendframework.com/",
+    "license": "BSD-3-Clause",
+    "autoload": {
+        "psr-0": {
+            "ZendService\\Api\\": "library/"
+        }
+    },
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "http://packages.zendframework.com/"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.3",
+        "zendframework/zend-http": ">=2.1.4",
+        "zendframework/zend-uri": ">=2.1.4"
+    }
+}
