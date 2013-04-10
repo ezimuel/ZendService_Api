@@ -16,10 +16,10 @@ Installation
 
 You can install this component using [composer](http://getcomposer.org/) with following commands:
 
-    ```
-    curl -s https://getcomposer.org/installer | php
-    php composer.phar install
-    ```
+```ssh
+curl -s https://getcomposer.org/installer | php
+php composer.phar install
+```
 
 Usage
 -----
@@ -47,39 +47,39 @@ The HTTP request can be represented as follow:
 
 You can use the Api class to perform this request as follow:
 
-    ```php
-    use ZendService\Api\Api;
+```php
+use ZendService\Api\Api;
 
-    $api = new Api('path/to/config/files');
-    $api->authenticate('admin', 'test');
-    if ($api->isSuccess()) {
-        printf("OK!\n");
-    } else {
-        printf("Error (%d): %s\n", $api->getStatusCode(), $api->getErrorMsg());
-    }
-    ```
+$api = new Api('path/to/config/files');
+$api->authenticate('admin', 'test');
+if ($api->isSuccess()) {
+    printf("OK!\n");
+} else {
+    printf("Error (%d): %s\n", $api->getStatusCode(), $api->getErrorMsg());
+}
+```
 
 The PHP configuration files for the `authenticate` API call are reported as follow:
 
-    ```php
-    // authenticate.php
-    return array(
-        'uri' => 'http://localhost/v1/auth',
-        'header' => array(
-            'Content-Type' => 'application/json'
-        ),
-        'method' => 'POST',
-        'body' => json_encode(array(
-            'auth' => array(
-                'username' => $params['username'],
-                'password' => $params['password']
-            )
-        )),
-        'response' => array(
-            'valid_codes' => array('200')
+```php
+// authenticate.php
+return array(
+    'uri' => 'http://localhost/v1/auth',
+    'header' => array(
+        'Content-Type' => 'application/json'
+     ),
+     'method' => 'POST',
+     'body' => json_encode(array(
+        'auth' => array(
+            'username' => $params['username'],
+            'password' => $params['password']
         )
-    );
-    ```
+     )),
+     'response' => array(
+        'valid_codes' => array('200')
+     )
+);
+```
 
 In this configuration file you can specify also the HTTP status code for the successful
 requests using the `valid_codes` parameter in the `response` section. 
@@ -108,18 +108,18 @@ If you need to pass a query string for an API HTTP call you can use the `setQuer
 of the `Api` class. For instance, imagine you need to pass the HTTP query string `?auth=strong` in
 the previous example, you can use the following code:
 
-    ```php
-    use ZendService\Api\Api;
+```php
+use ZendService\Api\Api;
 
-    $api = new Api('path/to/config/files');
-    $api->setQueryParams(array( 'auth' => 'strong' ));
-    $api->authenticate('admin', 'test');
-    if ($api->isSuccess()) {
-        printf("OK!\n");
-    } else {
-        printf("Error (%d): %s\n", $api->getStatusCode(), $api->getErrorMsg());
-    }
-    ```
+$api = new Api('path/to/config/files');
+$api->setQueryParams(array( 'auth' => 'strong' ));
+$api->authenticate('admin', 'test');
+if ($api->isSuccess()) {
+    printf("OK!\n");
+} else {
+    printf("Error (%d): %s\n", $api->getStatusCode(), $api->getErrorMsg());
+}
+```
 
 You can reset the query string calling the `setQueryParams()` function without a parameter.
 
