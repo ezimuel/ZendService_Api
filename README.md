@@ -37,7 +37,6 @@ Let see an example, image you need to consume an authentication API call with a 
 a [JSON](http://www.json.org/) data format with the following parameters: username and password.
 The HTTP request can be represented as follow:
 
-    ```
     PUT /v1/auth HTTP/1.1
     Host: localhost
     Connection: close
@@ -45,7 +44,6 @@ The HTTP request can be represented as follow:
     Content-Length: 57
 
     { 'auth' : { 'username' : 'admin', 'password' : 'test' }}
-    ```
 
 You can use the Api class to perform this request as follow:
 
@@ -88,15 +86,18 @@ requests using the `valid_codes` parameter in the `response` section.
 In order to map the API parameters to the `authenticate` function we need to use another
 configuration file, the `authenticate_params.php` reported below:
 
-    ```php
-    // authenticate_params.php
-    return array(
-        'params' => array(
-            'username' => 'string',
-            'password' => 'string'
-        )
-    );
-    ```
+
+```php
+// authenticate_params.php
+return array(
+    'params' => array(
+        'username' => 'string',
+        'password' => 'string'
+    )
+);
+```
+
+
 In this configuration file you can specify the type format of each parameters. In our example
 we used two strings. This can be very useful for validate the parameters passed to the API calls.
 
