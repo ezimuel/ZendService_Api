@@ -123,3 +123,30 @@ if ($api->isSuccess()) {
 
 You can reset the query string calling the `setQueryParams()` function without a parameter.
 
+
+Set the default HTTP headers
+----------------------------
+
+You can specify a default HTTP headers to be used for all the HTTP calls. For instance, if you need
+to call a vendor API passing an authentication token using a special header field you can use this
+feature to set a default headers to be used for all the next API calls.
+
+To set a default headers you can use the `setHeaders` function, below is reported an example:
+
+```php
+use ZendService\Api\Api;
+
+$api = new Api('path/to/config/files');
+$api->setHeaders(array( 'X-Auth-Token' => 'token' ));
+$api->test($params);
+if ($api->isSuccess()) {
+    printf("OK!\n");
+} else {
+    printf("Error (%d): %s\n", $api->getStatusCode(), $api->getErrorMsg());
+}
+```
+
+The `test` API will execute a HTTP request using the headers specified in the `test.php` configuration
+file plus the `X-Auth-Token` header. Basically, the headers specified in the configuration file are merged
+with the default one specified using the `setHeaders` function. You can overwrite the default headers
+using the same header key in the configuration file.

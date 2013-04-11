@@ -49,6 +49,13 @@ class Api {
     protected $queryParams = array();
     
     /**
+     * Default headers to be used during the HTTP call
+     * 
+     * @var array 
+     */
+    protected $headers = array();
+    
+    /**
      * Constructor
      * 
      * @param  string $pathApi
@@ -105,9 +112,14 @@ class Api {
         $client->resetParameters();
         $this->errorMsg = null;
         $this->errorCode = null;
-        if (isset($request['header'])) {
-            $client->setHeaders($request['header']);
+        $headers = array();
+        if (!empty($this->headers)) {
+            $headers = $this->getHeaders();
         }
+        if (isset($request['header'])) {
+            $headers = array_merge($headers, $request['header']);
+        }
+        $client->setHeaders($headers);
         $client->setMethod($request['method']);
         if (isset($request['body'])) {
             $client->setRawBody($request['body']);
@@ -199,7 +211,7 @@ class Api {
     }
     
     /**
-     * Set the query params
+     * Set the HTTP query params
      * 
      * @param  array $query
      * @return Api
@@ -211,13 +223,35 @@ class Api {
     }
     
     /**
-     * Get the query params
+     * Get the HTTP query params
      * 
      * @return array 
      */
     public function getQueryParams()
     {
         return $this->queryParams;
+    }
+    
+    /**
+     * Set the HTTP headers
+     * 
+     * @param  array $headers
+     * @return Api 
+     */
+    public function setHeaders(array $headers = null)
+    {
+        $this->headers = $headers;
+        return $this;
+    }
+    
+    /**
+     * Get the HTTP headers
+     * 
+     * @return array 
+     */
+    public function getHeaders()
+    {
+        return $this->headers;
     }
     
     /**

@@ -70,6 +70,14 @@ class ApiTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($queryParams, $this->api->getQueryParams());
     }
     
+    public function testSetHeaders()
+    {
+        $headers = array('Content-Type' => 'application/json');
+        $result = $this->api->setHeaders($headers);
+        $this->assertTrue($result instanceof Api);
+        $this->assertEquals($headers, $this->api->getHeaders());
+    }
+    
     public function testSetHttpClient()
     {
         $httpClient = new HttpClient();
