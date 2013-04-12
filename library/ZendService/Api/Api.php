@@ -42,6 +42,13 @@ class Api {
     protected $statusCode;
     
     /**
+     * URI
+     * 
+     * @var string 
+     */
+    protected $uri = null;
+    
+    /**
      * Query parameters of the HTTP call
      * 
      * @var array 
@@ -124,7 +131,15 @@ class Api {
         if (isset($request['body'])) {
             $client->setRawBody($request['body']);
         }
-        $client->setUri($request['uri']);
+        $uri = $this->getUri();
+        if (!empty($uri)) {
+            if (substr($request['uri'], 0, 4) === 'http') {
+                $uri = $request['uri'];
+            } else {
+                $uri .= $request['uri'];
+            }
+        }
+        $client->setUri($uri);
         if (isset($request['response']['format'])) {
             $formatOutput = strtolower($request['response']['format']);
         }
@@ -208,6 +223,28 @@ class Api {
     public function getPathApi()
     {
         return $this->pathApi;
+    }
+    
+    /**
+     * Set the URI
+     * 
+     * @param  string $uri
+     * @return Api 
+     */
+    public function setUri($uri = null)
+    {
+        $this->uri = $uri;
+        return $this;
+    }
+    
+    /**
+     * Get the URI
+     * 
+     * @return string 
+     */
+    public function getUri()
+    {
+        return $this->uri;
     }
     
     /**

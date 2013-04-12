@@ -62,6 +62,23 @@ class ApiTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(__DIR__, $this->api->getPathApi());
     }
     
+    public function testSetUri()
+    {
+        $url = 'http://localhost';
+        $result = $this->api->setUri($url);
+        $this->assertTrue($result instanceof Api);
+        $this->assertEquals($url, $this->api->getUri());
+    }
+    
+    public function testSetEmptyUri()
+    {
+        $url = 'http://localhost';
+        $result = $this->api->setUri($url);
+        $this->assertEquals($url, $this->api->getUri());
+        $result = $this->api->setUri();
+        $this->assertEquals(null, $this->api->getUri());
+    }
+    
     public function testSetQueryParams()
     {
         $queryParams = array('foo' => 'bar');
@@ -70,12 +87,30 @@ class ApiTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($queryParams, $this->api->getQueryParams());
     }
     
+    public function testSetEmptyQueryParams()
+    {
+        $queryParams = array('foo' => 'bar');
+        $result = $this->api->setQueryParams($queryParams);
+        $this->assertEquals($queryParams, $this->api->getQueryParams());
+        $result = $this->api->setQueryParams();
+        $this->assertEquals(null, $this->api->getQueryParams());
+    }
+    
     public function testSetHeaders()
     {
         $headers = array('Content-Type' => 'application/json');
         $result = $this->api->setHeaders($headers);
         $this->assertTrue($result instanceof Api);
         $this->assertEquals($headers, $this->api->getHeaders());
+    }
+    
+    public function testSetEmptyHeaders()
+    {
+        $headers = array('Content-Type' => 'application/json');
+        $result = $this->api->setHeaders($headers);
+        $this->assertEquals($headers, $this->api->getHeaders());
+        $result = $this->api->setHeaders();
+        $this->assertEquals(null, $this->api->getHeaders());
     }
     
     public function testSetHttpClient()
