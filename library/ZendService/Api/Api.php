@@ -123,6 +123,13 @@ class Api {
         $client->resetParameters();
         $this->errorMsg = null;
         $this->errorCode = null;
+        $client->setMethod($request['method']);
+        if (!empty($this->queryParams)) {
+            $client->setParameterGet($this->queryParams);
+        }
+        if (isset($request['body'])) {
+            $client->setRawBody($request['body']);
+        }
         $headers = array();
         if (!empty($this->headers)) {
             $headers = $this->getHeaders();
@@ -131,10 +138,6 @@ class Api {
             $headers = array_merge($headers, $request['header']);
         }
         $client->setHeaders($headers);
-        $client->setMethod($request['method']);
-        if (isset($request['body'])) {
-            $client->setRawBody($request['body']);
-        }
         $uri = $this->getUri();
         if (!empty($uri)) {
             if (substr($request['uri'], 0, 4) === 'http') {
@@ -150,9 +153,6 @@ class Api {
         $validCodes = array(200);
         if (isset($request['response']['valid_codes'])) {
             $validCodes = $request['response']['valid_codes'];
-        }
-        if (!empty($this->queryParams)) {
-            $client->setParameterGet($this->queryParams);
         }
         $response         = $client->send();
         $this->statusCode = $response->getStatusCode();
