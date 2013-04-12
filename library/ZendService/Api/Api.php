@@ -99,9 +99,13 @@ class Api {
         
         // Read the API file parameters
         $params = include ($fileParams);
-        $i = 0;
+        $i   = 0;
+        $tot = count($arguments);
         foreach ($params['params'] as $var => $type) {
-            if (!$this->checkType($arguments[$i], $type)) {
+            if ($i >= $tot) {
+                break;
+            }
+            if (!empty($arguments[$i]) && !$this->checkType($arguments[$i], $type)) {
                 throw new Exception\RuntimeException("The parameter $var must contain a value of $type");
             }
             $params['params'][$var] = $arguments[$i++];

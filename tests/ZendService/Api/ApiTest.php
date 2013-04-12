@@ -128,6 +128,15 @@ class ApiTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('This is a test!', $result);
     }
     
+    public function testWrongParamsApi()
+    {
+        $result = $this->api->test('foo');
+        $this->assertTrue($this->api->isSuccess());
+        
+        $result = $this->api->test('foo', null);
+        $this->assertTrue($this->api->isSuccess());
+    }
+    
     public function testError()
     {
         $result = $this->api->test('foo', 'bar');
