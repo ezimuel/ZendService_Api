@@ -1,12 +1,11 @@
 {
-    "name": "zendframework/zendservice-api",
-    "description": "API client builder",
+    "name": "ezimuel/zendservice-api",
+    "description": "Micro framework for HTTP API client",
     "type": "library",
     "keywords": [
         "zf2",
         "api"
     ],
-    "homepage": "http://packages.zendframework.com/",
     "license": "BSD-3-Clause",
     "autoload": {
         "psr-0": {
@@ -16,7 +15,7 @@
     "repositories": [
         {
             "type": "composer",
-            "url": "http://packages.zendframework.com/"
+            "url" : "http://packages.zendframework.com/"
         }
     ],
     "require": {
