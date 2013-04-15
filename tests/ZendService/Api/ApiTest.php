@@ -60,6 +60,20 @@ class ApiTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('OK', $result);
     }
     
+    public function testApiJson()
+    {
+        $result = $this->api->json();
+        $this->assertTrue(is_array($result));
+        $this->assertEquals('OK', $result['result']);
+    }
+    
+    public function testApiXml()
+    {
+        $result = $this->api->xml();
+        $this->assertTrue(is_array($result));
+        $this->assertEquals('OK', $result['result']);
+    }
+    
     public function testSetPathApi()
     {
         $result = $this->api->setPathApi(__DIR__);

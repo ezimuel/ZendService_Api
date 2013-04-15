@@ -88,7 +88,7 @@ class Api {
      * @param  string $name
      * @param  mixed $arguments
      * @throws Exception\InvalidArgumentException 
-     * @return mixed|boolean
+     * @return array|string|boolean
      */
     public function __call($name, $arguments)
     {       
@@ -165,10 +165,11 @@ class Api {
         if (in_array($this->statusCode, $validCodes)) {
             $this->success = true;
             if (isset($formatOutput)) {
-                if ($formatOuput === 'json') {
+                if ($formatOutput === 'json') {
                     return json_decode($response->getBody(),true);
                 } elseif ($formatOutput === 'xml') {
-                    return new \SimpleXMLElement($response->getBody());
+                    return json_decode(json_encode((array) simplexml_load_string($response->getBody())), 1);
+                    //return new \SimpleXMLElement($response->getBody());
                 }
             }
             return $response->getBody();
