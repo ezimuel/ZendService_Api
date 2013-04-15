@@ -42,6 +42,13 @@ class Api {
     protected $statusCode;
     
     /**
+     * Success of the last HTTP call
+     * 
+     * @var boolean 
+     */
+    protected $success = false;
+    
+    /**
      * URI
      * 
      * @var string 
@@ -84,38 +91,33 @@ class Api {
      * @return mixed|boolean
      */
     public function __call($name, $arguments)
-    {
-        // Check the API file data
-        $fileName = $this->pathApi . '/' . $name . '.php';
-        if (!file_exists($fileName)) {
-            throw new Exception\RuntimeException("The API method $name doesn't exist");
-        }
-        
-        // Check the API file parameters
+    {       
+        // Read the API file parameters if exists
         $fileParams = $this->pathApi . '/' . $name . '_params.php';
-        if (!file_exists($fileParams)) {
-            throw new Exception\RuntimeException("The API parameters file $name doesn't exist");
-        } 
-        
-        // Read the API file parameters
-        $params = include ($fileParams);
-        $i   = 0;
-        $tot = count($arguments);
-        foreach ($params['params'] as $var => $type) {
-            if ($i >= $tot) {
-                break;
+        if (file_exists($fileParams)) {
+            // Read the API file parameters
+            $params = include ($fileParams);
+            $i   = 0;
+            $tot = count($arguments);
+            foreach ($params['params'] as $var => $type) {
+                if ($i >= $tot) {
+                    throw new Exception\RuntimeException("You miss one or more parameters, check the file $fileParams");
+                }
+                if (!empty($arguments[$i]) && !$this->checkType($arguments[$i], $type)) {
+                    throw new Exception\RuntimeException("The parameter $var must contain a value of $type");
+                }
+                $params['params'][$var] = $arguments[$i++];
             }
-            if (!empty($arguments[$i]) && !$this->checkType($arguments[$i], $type)) {
-                throw new Exception\RuntimeException("The parameter $var must contain a value of $type");
-            }
-            $params['params'][$var] = $arguments[$i++];
+            extract($params);
         }
-        extract($params);
         
-        // Read the API file data
-        $request = include ($fileName);
-        if (empty($request) || !is_array($request)) {
-            throw new Exception\RuntimeException("The API data, stored in $fileName, are not valid");
+        // Read the API file data if exists
+        $fileName = $this->pathApi . '/' . $name . '.php';
+        if (file_exists($fileName)) {
+            $request = include ($fileName);
+            if (empty($request) || !is_array($request)) {
+                throw new Exception\RuntimeException("The API stored in $fileName is not valid");
+            }
         }
         
         // HTTP request
@@ -123,7 +125,11 @@ class Api {
         $client->resetParameters();
         $this->errorMsg = null;
         $this->errorCode = null;
-        $client->setMethod($request['method']);
+        if (isset($request['method'])) {
+            $client->setMethod($request['method']);
+        } else {
+            $client->setMethod('GET');
+        }
         if (!empty($this->queryParams)) {
             $client->setParameterGet($this->queryParams);
         }
@@ -139,7 +145,7 @@ class Api {
         }
         $client->setHeaders($headers);
         $uri = $this->getUri();
-        if (!empty($uri)) {
+        if (isset($request['uri'])) {
             if (substr($request['uri'], 0, 4) === 'http') {
                 $uri = $request['uri'];
             } else {
@@ -157,6 +163,7 @@ class Api {
         $response         = $client->send();
         $this->statusCode = $response->getStatusCode();
         if (in_array($this->statusCode, $validCodes)) {
+            $this->success = true;
             if (isset($formatOutput)) {
                 if ($formatOuput === 'json') {
                     return json_decode($response->getBody(),true);
@@ -166,7 +173,8 @@ class Api {
             }
             return $response->getBody();
         }
-        $this->errorMsg  = $response->getBody();
+        $this->errorMsg = $response->getBody();
+        $this->success  = false;
         return false;
     }
     
@@ -342,6 +350,6 @@ class Api {
      */
     public function isSuccess()
     {
-        return empty($this->errorMsg);
+        return $this->success;
     }
 }

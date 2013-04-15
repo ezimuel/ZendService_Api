@@ -47,12 +47,17 @@ class ApiTest extends \PHPUnit_Framework_TestCase
         $api = new Api('test');
     }
     
-    /**
-     * @expectedException RuntimeException 
-     */
     public function testWrongApi()
     {
         $result = $this->api->foo('bar');
+        $this->assertFalse($result);
+        $this->assertFalse($this->api->isSuccess());
+    }
+    
+    public function testApiWithoutParams()
+    {
+        $result = $this->api->noParams();
+        $this->assertEquals('OK', $result);
     }
     
     public function testSetPathApi()
@@ -130,8 +135,8 @@ class ApiTest extends \PHPUnit_Framework_TestCase
     
     public function testWrongParamsApi()
     {
+        $this->setExpectedException('RuntimeException');
         $result = $this->api->test('foo');
-        $this->assertTrue($this->api->isSuccess());
         
         $result = $this->api->test('foo', null);
         $this->assertTrue($this->api->isSuccess());
