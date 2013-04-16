@@ -22,9 +22,10 @@ class ApiTest extends \PHPUnit_Framework_TestCase
 {
     public function setUp()
     {
-        $this->api   = new Api(__DIR__ . '/_files');
         $httpAdapter = new HttpTest;
+        $this->api   = new Api();
         $this->api->getHttpClient()->setAdapter($httpAdapter);
+        $this->api->setApiPath(__DIR__ . '/_files');
         
         $fileResponse = __DIR__ . '/_files/'. $this->getName() . '.response';
         if (file_exists($fileResponse)) {
@@ -34,30 +35,24 @@ class ApiTest extends \PHPUnit_Framework_TestCase
     
     public function testConstruct()
     {
-        $api = new Api(__DIR__);
-        $this->assertEquals(__DIR__, $api->getPathApi());
+        $api = new Api();
         $this->assertTrue($api->getHttpClient() instanceof HttpClient);
     }
     
     /**
-     * @expectedException InvalidArgumentException 
+     * @expectedException PHPUnit_Framework_Error
      */
     public function testFailConstruct()
     {
         $api = new Api('test');
     }
     
+    /**
+     * @expectedException RuntimeException
+     */
     public function testWrongApi()
     {
         $result = $this->api->foo('bar');
-        $this->assertFalse($result);
-        $this->assertFalse($this->api->isSuccess());
-    }
-    
-    public function testApiWithoutParams()
-    {
-        $result = $this->api->noParams();
-        $this->assertEquals('OK', $result);
     }
     
     public function testApiJson()
@@ -76,9 +71,9 @@ class ApiTest extends \PHPUnit_Framework_TestCase
     
     public function testSetPathApi()
     {
-        $result = $this->api->setPathApi(__DIR__);
+        $result = $this->api->setApiPath(__DIR__);
         $this->assertTrue($result instanceof Api);
-        $this->assertEquals(__DIR__, $this->api->getPathApi());
+        $this->assertEquals(__DIR__, $this->api->getApiPath());
     }
     
     public function testSetUri()
@@ -147,15 +142,6 @@ class ApiTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('This is a test!', $result);
     }
     
-    public function testWrongParamsApi()
-    {
-        $this->setExpectedException('RuntimeException');
-        $result = $this->api->test('foo');
-        
-        $result = $this->api->test('foo', null);
-        $this->assertTrue($this->api->isSuccess());
-    }
-    
     public function testError()
     {
         $result = $this->api->test('foo', 'bar');
@@ -163,5 +149,17 @@ class ApiTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('Error', $this->api->getErrorMsg());
         $this->assertEquals(500, $this->api->getStatusCode());
         $this->assertTrue(empty($result));
+    }
+    
+    public function testSetApi()
+    {
+        $this->api->setApi('test', function ($params) {
+            return include __DIR__ . '/_files/test.php';
+        });
+        $this->api->getHttpClient()->getAdapter()->setResponse(file_get_contents(__DIR__ . '/_files/testApi.response'));
+        $result = $this->api->test('foo', 'bar');
+        $this->assertTrue($this->api->isSuccess());
+        $this->assertEquals('This is a test!', $result);
+        $this->assertTrue(is_callable($this->api->getApi('test')));
     }
 }

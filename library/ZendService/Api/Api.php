@@ -25,7 +25,7 @@ class Api {
      * 
      * @var string 
      */
-    protected $pathApi;
+    protected $apiPath;
     
     /**
      * Error message of the last HTTP call
@@ -70,15 +70,20 @@ class Api {
     protected $headers = array();
     
     /**
+     * HTTP request specification for an API call
+     * 
+     * @var array 
+     */
+    protected $api = array();
+    
+    /**
      * Constructor
      * 
-     * @param  string $pathApi
      * @param  HttpClient $httpClient
      * @throws Exception\InvalidArgumentException 
      */
-    public function __construct($pathApi, HttpClient $httpClient = null)
+    public function __construct(HttpClient $httpClient = null)
     {
-        $this->setPathApi($pathApi);
         $this->setHttpClient($httpClient ?: new HttpClient);
     }
     
@@ -86,80 +91,74 @@ class Api {
      * Call a webservice
      * 
      * @param  string $name
-     * @param  mixed $arguments
+     * @param  mixed $params
      * @throws Exception\InvalidArgumentException 
      * @return array|string|boolean
      */
-    public function __call($name, $arguments)
+    public function __call($name, $params)
     {       
-        // Read the API file parameters if exists
-        $fileParams = $this->pathApi . '/' . $name . '_params.php';
-        if (file_exists($fileParams)) {
-            // Read the API file parameters
-            $params = include ($fileParams);
-            $i   = 0;
-            $tot = count($arguments);
-            foreach ($params['params'] as $var => $type) {
-                if ($i >= $tot) {
-                    throw new Exception\RuntimeException("You miss one or more parameters, check the file $fileParams");
+        // API specifications
+        if (!empty($this->api[$name])) {
+            $api = $this->api[$name]($params);
+        } else {
+            if (!empty($this->apiPath)) {
+                $fileName = $this->apiPath . '/' . $name . '.php';
+                if (file_exists($fileName)) {
+                    $apiFunc = function ($params) use ($fileName) {
+                        return include $fileName;
+                    };
+                    $api = $apiFunc($params);
                 }
-                if (!empty($arguments[$i]) && !$this->checkType($arguments[$i], $type)) {
-                    throw new Exception\RuntimeException("The parameter $var must contain a value of $type");
-                }
-                $params['params'][$var] = $arguments[$i++];
-            }
-            extract($params);
+            } 
+        }
+        if (empty($api)) {
+            throw new Exception\RuntimeException(
+                "The HTTP request specification for the API $name is empty. I cannot proceed without it."
+            );
         }
         
-        // Read the API file data if exists
-        $fileName = $this->pathApi . '/' . $name . '.php';
-        if (file_exists($fileName)) {
-            $request = include ($fileName);
-            if (empty($request) || !is_array($request)) {
-                throw new Exception\RuntimeException("The API stored in $fileName is not valid");
-            }
-        }
-        
-        // HTTP request
+        // Build HTTP request
         $client = $this->getHttpClient();
         $client->resetParameters();
         $this->errorMsg = null;
         $this->errorCode = null;
-        if (isset($request['method'])) {
-            $client->setMethod($request['method']);
+        if (isset($api['method'])) {
+            $client->setMethod($api['method']);
         } else {
             $client->setMethod('GET');
         }
         if (!empty($this->queryParams)) {
             $client->setParameterGet($this->queryParams);
         }
-        if (isset($request['body'])) {
-            $client->setRawBody($request['body']);
+        if (isset($api['body'])) {
+            $client->setRawBody($api['body']);
         }
         $headers = array();
         if (!empty($this->headers)) {
             $headers = $this->getHeaders();
         }
-        if (isset($request['header'])) {
-            $headers = array_merge($headers, $request['header']);
+        if (isset($api['header'])) {
+            $headers = array_merge($headers, $api['header']);
         }
         $client->setHeaders($headers);
         $uri = $this->getUri();
-        if (isset($request['uri'])) {
-            if (substr($request['uri'], 0, 4) === 'http') {
-                $uri = $request['uri'];
+        if (isset($api['uri'])) {
+            if (substr($api['uri'], 0, 4) === 'http') {
+                $uri = $api['uri'];
             } else {
-                $uri .= $request['uri'];
+                $uri .= $api['uri'];
             }
         }
         $client->setUri($uri);
-        if (isset($request['response']['format'])) {
-            $formatOutput = strtolower($request['response']['format']);
+        if (isset($api['response']['format'])) {
+            $formatOutput = strtolower($api['response']['format']);
         }
         $validCodes = array(200);
-        if (isset($request['response']['valid_codes'])) {
-            $validCodes = $request['response']['valid_codes'];
+        if (isset($api['response']['valid_codes'])) {
+            $validCodes = $api['response']['valid_codes'];
         }
+        
+        // Send HTTP request
         $response         = $client->send();
         $this->statusCode = $response->getStatusCode();
         if (in_array($this->statusCode, $validCodes)) {
@@ -169,7 +168,6 @@ class Api {
                     return json_decode($response->getBody(),true);
                 } elseif ($formatOutput === 'xml') {
                     return json_decode(json_encode((array) simplexml_load_string($response->getBody())), 1);
-                    //return new \SimpleXMLElement($response->getBody());
                 }
             }
             return $response->getBody();
@@ -180,62 +178,28 @@ class Api {
     }
     
     /**
-     * Check type of a $value
+     * Set the API path
      * 
-     * @param  mixed $value
-     * @param  string $type
-     * @return boolean 
-     */
-    protected function checkType($value, $type)
-    {
-        switch ($type) {
-            case 'int' :
-            case 'integer' :
-                $valid = is_int($value);
-                break;
-            case 'float' :
-            case 'double' :
-                $valid = is_double($value);
-                break;
-            case 'bool' :
-            case 'boolean' :
-                $valid = is_bool($value);
-                break;
-            case 'array' :
-                $valid = is_array($value);
-                break;
-            case 'string' :
-                $valid = is_string($value);
-                break;
-            default:
-                $valid = $value instanceof $type;
-        }
-        return $valid;
-    }
-    
-    /**
-     * Set the path API
-     * 
-     * @param  string $pathApi
+     * @param  string $apiPath
      * @throws Exception\InvalidArgumentException 
      */
-    public function setPathApi($pathApi)
+    public function setApiPath($apiPath)
     {
-        if (!is_dir($pathApi)) {
-            throw new Exception\InvalidArgumentException("Tha path $pathApi specified is not valid");
+        if (!is_dir($apiPath)) {
+            throw new Exception\InvalidArgumentException("Tha path $apiPath specified is not valid");
         }
-        $this->pathApi = $pathApi;
+        $this->apiPath = $apiPath;
         return $this;
     }
     
     /**
-     * Get the path API
+     * Get the API path
      * 
      * @return string 
      */
-    public function getPathApi()
+    public function getApiPath()
     {
-        return $this->pathApi;
+        return $this->apiPath;
     }
     
     /**
@@ -352,5 +316,35 @@ class Api {
     public function isSuccess()
     {
         return $this->success;
+    }
+    
+    /**
+     * Set the HTTP request specficiation for the API $name
+     * 
+     * @param  string $name
+     * @param  callback $api
+     * @return Api 
+     */
+    public function setApi($name, $api) 
+    {
+        if (!is_string($name)) {
+            throw new Exception\InvalidArgumentException("The name of the API must be a string");
+        }
+        if (!is_callable($api)) {
+            throw new Exception\InvalidArgumentException("The value of the API must be a callable");
+        }
+        $this->api[$name] = $api;
+        return $this;
+    }
+    
+    /**
+     * Get the HTTP request specification of the API $name
+     * 
+     * @param  string $name
+     * @return array 
+     */
+    public function getApi($name)
+    {
+        return $this->api[$name];
     }
 }

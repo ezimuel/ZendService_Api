@@ -8,8 +8,8 @@ return array(
     'body' => json_encode(array(
         'test' => array(
             'passwordCredentials' => array(
-                'username' => $params['foo'],
-                'password' => $params['bar']
+                'username' => $params[0],
+                'password' => $params[1]
             )
         )
     )),

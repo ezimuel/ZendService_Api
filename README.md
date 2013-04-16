@@ -2,7 +2,7 @@ ZendService\Api
 ===============
 
 This is a micro HTTP framework to consume generic API calls in PHP. This framework can be used to
-create PHP libraries that consume specific HTTP API using simple configuration files.
+create PHP libraries that consume specific HTTP API using simple configuration array (or files).
 This project uses the `Zend\Http\Client` component of [Zend Framework 2](https://github.com/zendframework/zf2).
 
 Release note
@@ -26,12 +26,11 @@ Usage
 
 The `ZendService\Api` component can be used to facilitate the consume of generic API using HTTP.
 The micro HTTP framework is able to configure the header, method, body, and query string of a HTTP
-request according to specific API parameters. This mapping is provided using PHP configuration array.
-The `ZendService\Api` consumes, for each API call, two PHP configuration files, one for the HTTP request
-and another for the parameters mapping. The configuration files are named using the same name of 
-the PHP function to generate. For instance, if the name of the API function is authenticate, the 
-configuration files will be named `authenticate.php` (for the HTTP request) and `authenticate_params.php`
-(for the mapping).
+request according to specific API parameters. This mapping is provided using a special PHP configuration
+array.
+
+You can specify the API parameters using the `setApi` method. This method accepts two parameters:
+the name of the API and a closure (callback) that returns the configuration with a PHP array.
 
 Let see an example, image you need to consume an authentication API call with a POST HTTP request using
 a [JSON](http://www.json.org/) data format with the following parameters: username and password.
@@ -45,61 +44,134 @@ The HTTP request can be represented as follow:
 
     { 'auth' : { 'username' : 'admin', 'password' : 'test' }}
 
-You can use the Api class to perform this request as follow:
+You need to configure the API call using the `setApi` method in this way (we use the `auth` name for this
+API):
 
 ```php
 use ZendService\Api\Api;
 
-$api = new Api('path/to/config/files');
-$api->authenticate('admin', 'test');
+$api = new Api();
+$api->setApi('auth', function ($params) {
+    return array(
+        'uri' => 'http://localhost/v1/auth',
+        'header' => array(
+            'Content-Type' => 'application/json'
+        ),
+        'method' => 'POST',
+        'body' => json_encode(array(
+            'auth' => array(
+                'username' => $params[0],
+                'password' => $params[1]
+            )
+        )),
+        'response' => array(
+            'valid_codes' => array('200')
+        )
+    );
+});
+```
+After that you can execute the API call using the function `auth` (this function is managed by the magic `__call`
+function of PHP):
+
+```php
+$result = $api->auth('username', 'password');
 if ($api->isSuccess()) {
-    printf("OK!\n");
+    var_dump($result);
 } else {
     printf("Error (%d): %s\n", $api->getStatusCode(), $api->getErrorMsg());
 }
 ```
 
-The PHP configuration files for the `authenticate` API call are reported as follow:
+The mapping with the `auth` arguments and the API specification is managed using the array `$params`.
+You have to use the numerical index of the `$params` to match the order of the arguments in the function.
+Using the configuration array you can specify all the HTTP data for the API request (headers, body, uri, etc).
+You can also specify the HTTP status code for the successful requests using the `valid_codes` parameter
+in the `response` section. 
+
+Using a configuration file
+--------------------------
+
+You can also use a configuration file for the API calls instead of using the `setApi` method. You need
+to create a PHP file with the same name of the API call. This file contains the API configuration array.
+For instance, for the previous example you have to create a `auth.php` file containing the following array:
 
 ```php
-// authenticate.php
 return array(
     'uri' => 'http://localhost/v1/auth',
     'header' => array(
         'Content-Type' => 'application/json'
-     ),
-     'method' => 'POST',
-     'body' => json_encode(array(
+    ),
+    'method' => 'POST',
+    'body' => json_encode(array(
         'auth' => array(
-            'username' => $params['username'],
-            'password' => $params['password']
+            'username' => $params[0],
+            'password' => $params[1]
         )
-     )),
-     'response' => array(
+    )),
+    'response' => array(
         'valid_codes' => array('200')
-     )
-);
-```
-
-In this configuration file you can specify also the HTTP status code for the successful
-requests using the `valid_codes` parameter in the `response` section. 
-In order to map the API parameters to the `authenticate` function we need to use another
-configuration file, the `authenticate_params.php` reported below:
-
-
-```php
-// authenticate_params.php
-return array(
-    'params' => array(
-        'username' => 'string',
-        'password' => 'string'
     )
 );
 ```
 
+You need to set the directory containing this configuration file using the `setApiPath` as follow:
 
-In this configuration file you can specify the type format of each parameters. In our example
-we used two strings. This can be very useful for validate the parameters passed to the API calls.
+```php
+use ZendService\Api\Api;
+
+$api = new Api();
+$api->setApiPath('path/to/api/config');
+$result = $api->auth('username', 'password');
+if ($api->isSuccess()) {
+    var_dump($result);
+} else {
+    printf("Error (%d): %s\n", $api->getStatusCode(), $api->getErrorMsg());
+}
+```
+
+Set the base URL for the API calls
+----------------------------------
+
+If you need to call different API from the same base URL you can use the `setUri` function. This function
+set the base URL and you can use relative URI for the specific API calls, for instance imagine you need
+to consume an [OpenStack](https://www.openstack.org/) service with the URL http://identity.api.openstack.org,
+we can set this address as base URL and use relative address for each API call.
+
+```php
+use ZendService\Api\Api;
+
+$api = new Api();
+$api->setUri('http://identity.api.openstack.org');
+$api->setApi('authentication', function ($params) {
+    return array(
+        'uri' => '/v2.0/tokens',
+        'header' => array(
+            'Content-Type' => 'application/json'
+        ),
+        'method' => 'POST',
+        'body' => json_encode(array(
+            'auth' => array(
+                'passwordCredentials' => array(
+                    'username' => $params[0],
+                    'password' => $params[1]
+                )
+            )
+        )),
+        'response' => array(
+            'valid_codes' => array('200', '203')
+        )
+    );
+});
+$result = $api->authentication('username', 'password');
+if ($api->isSuccess()) {
+    printf("Authenticate!\n");
+} else {
+    printf("Error (%d): %s\n", $api->getStatusCode(), $api->getErrorMsg());
+}
+```
+
+Note the use of the relative address in the `uri` parameter of the API configuration.
+
 
 Query string in the API calls
 -----------------------------
@@ -111,9 +183,9 @@ the previous example, you can use the following code:
 ```php
 use ZendService\Api\Api;
 
-$api = new Api('path/to/config/files');
+$api = new Api();
 $api->setQueryParams(array( 'auth' => 'strong' ));
-$api->authenticate('admin', 'test');
+$result = $api->authenticate('username', 'password');
 if ($api->isSuccess()) {
     printf("OK!\n");
 } else {
@@ -136,11 +208,12 @@ To set a default headers you can use the `setHeaders` function, below is reporte
 ```php
 use ZendService\Api\Api;
 
-$api = new Api('path/to/config/files');
+$api = new Api();
+$api->setApiPath('path/to/api/config');
 $api->setHeaders(array( 'X-Auth-Token' => 'token' ));
-$api->test($params);
+$result = $api->test('foo');
 if ($api->isSuccess()) {
-    printf("OK!\n");
+    var_dump($result);
 } else {
     printf("Error (%d): %s\n", $api->getStatusCode(), $api->getErrorMsg());
 }
