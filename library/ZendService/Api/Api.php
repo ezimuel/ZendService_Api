@@ -347,4 +347,17 @@ class Api {
     {
         return $this->api[$name];
     }
+
+    /**
+     * Reset the result of the last response
+     *
+     * @return Api
+     */
+    public function resetLastResponse()
+    {
+        $this->success    = false;
+        $this->errorMsg   = null;
+        $this->statusCode = null;
+        return $this;
+    }
 }

@@ -162,4 +162,18 @@ class ApiTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('This is a test!', $result);
         $this->assertTrue(is_callable($this->api->getApi('test')));
     }
+
+    public function testResetLastResponse()
+    {
+        $this->api->setApi('test', function ($params) {
+            return include __DIR__ . '/_files/test.php';
+        });
+        $this->api->getHttpClient()->getAdapter()->setResponse(file_get_contents(__DIR__ . '/_files/testApi.response'));
+        $result = $this->api->test('foo', 'bar');
+        $this->assertTrue($this->api->isSuccess());
+        $this->api->resetLastResponse();
+        $this->assertFalse($this->api->isSuccess());
+        $this->assertEquals(null, $this->api->getErrorMsg());
+        $this->assertEquals(null, $this->api->getStatusCode());
+    }
 }
