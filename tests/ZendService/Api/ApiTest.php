@@ -76,21 +76,21 @@ class ApiTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(__DIR__, $this->api->getApiPath());
     }
     
-    public function testSetUri()
+    public function testSetUrl()
     {
         $url = 'http://localhost';
-        $result = $this->api->setUri($url);
+        $result = $this->api->setUrl($url);
         $this->assertTrue($result instanceof Api);
-        $this->assertEquals($url, $this->api->getUri());
+        $this->assertEquals($url, $this->api->getUrl());
     }
     
-    public function testSetEmptyUri()
+    public function testSetEmptyUrl()
     {
         $url = 'http://localhost';
-        $result = $this->api->setUri($url);
-        $this->assertEquals($url, $this->api->getUri());
-        $result = $this->api->setUri();
-        $this->assertEquals(null, $this->api->getUri());
+        $result = $this->api->setUrl($url);
+        $this->assertEquals($url, $this->api->getUrl());
+        $result = $this->api->setUrl();
+        $this->assertEquals(null, $this->api->getUrl());
     }
     
     public function testSetQueryParams()

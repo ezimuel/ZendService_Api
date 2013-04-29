@@ -49,11 +49,11 @@ class Api {
     protected $success = false;
     
     /**
-     * URI
+     * Basepoint URL
      * 
      * @var string 
      */
-    protected $uri = null;
+    protected $url = null;
     
     /**
      * Query parameters of the HTTP call
@@ -141,15 +141,15 @@ class Api {
             $headers = array_merge($headers, $api['header']);
         }
         $client->setHeaders($headers);
-        $uri = $this->getUri();
-        if (isset($api['uri'])) {
-            if (substr($api['uri'], 0, 4) === 'http') {
-                $uri = $api['uri'];
+        $url = $this->getUrl();
+        if (isset($api['url'])) {
+            if (substr($api['url'], 0, 4) === 'http') {
+                $url = $api['url'];
             } else {
-                $uri .= $api['uri'];
+                $url .= $api['url'];
             }
         }
-        $client->setUri($uri);
+        $client->setUri($url);
         if (isset($api['response']['format'])) {
             $formatOutput = strtolower($api['response']['format']);
         }
@@ -203,25 +203,25 @@ class Api {
     }
     
     /**
-     * Set the URI
+     * Set the basepoint URL
      * 
-     * @param  string $uri
+     * @param  string $url
      * @return Api 
      */
-    public function setUri($uri = null)
+    public function setUrl($url = null)
     {
-        $this->uri = $uri;
+        $this->url = $url;
         return $this;
     }
     
     /**
-     * Get the URI
+     * Get the basepoint URL
      * 
      * @return string 
      */
-    public function getUri()
+    public function getUrl()
     {
-        return $this->uri;
+        return $this->url;
     }
     
     /**
