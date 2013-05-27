@@ -53,7 +53,7 @@ use ZendService\Api\Api;
 $api = new Api();
 $api->setApi('auth', function ($params) {
     return array(
-        'uri' => 'http://localhost/v1/auth',
+        'url' => 'http://localhost/v1/auth',
         'header' => array(
             'Content-Type' => 'application/json'
         ),
@@ -97,7 +97,7 @@ For instance, for the previous example you have to create a `auth.php` file cont
 
 ```php
 return array(
-    'uri' => 'http://localhost/v1/auth',
+    'url' => 'http://localhost/v1/auth',
     'header' => array(
         'Content-Type' => 'application/json'
     ),
@@ -132,7 +132,7 @@ if ($api->isSuccess()) {
 Set the base URL for the API calls
 ----------------------------------
 
-If you need to call different API from the same base URL you can use the `setUri` function. This function
+If you need to call different API from the same base URL you can use the `setUrl` function. This function
 set the base URL and you can use relative URI for the specific API calls, for instance imagine you need
 to consume an [OpenStack](https://www.openstack.org/) service with the URL http://identity.api.openstack.org,
 we can set this address as base URL and use relative address for each API call.
@@ -141,10 +141,10 @@ we can set this address as base URL and use relative address for each API call.
 use ZendService\Api\Api;
 
 $api = new Api();
-$api->setUri('http://identity.api.openstack.org');
+$api->setUrl('http://identity.api.openstack.org');
 $api->setApi('authentication', function ($params) {
     return array(
-        'uri' => '/v2.0/tokens',
+        'url' => '/v2.0/tokens',
         'header' => array(
             'Content-Type' => 'application/json'
         ),
@@ -170,7 +170,7 @@ if ($api->isSuccess()) {
 }
 ```
 
-Note the use of the relative address in the `uri` parameter of the API configuration.
+Note the use of the relative address in the `url` parameter of the API configuration.
 
 
 Query string in the API calls
